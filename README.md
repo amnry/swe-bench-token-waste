@@ -59,7 +59,7 @@ read-only-inclusive on mini v1.13.3 (99.78% of cache-traffic calls) and v1.16.0 
 fully inclusive on v2.0.0. Same provider, same scaffold, opposite meaning; we found no version
 note documenting the change. The same 6 Anthropic entries ($1,786.92 of traffic) price at:
 
-- litellm v2.0.0 meaning: $1,786.35 (-0.0%)
+- litellm v2.0.0 meaning: $1,786.35 (baseline; -0.03% vs the $1,786.92 traffic figure)
 - litellm v1.13-v1.16 meaning: $1,975.29 (+10.5%; +13.7-18.2% per v2.0.0 entry)
 - Anthropic raw-API meaning: $9,912.95 (+455%)
 
@@ -104,7 +104,9 @@ reproducible from any public source.
 **(e) Identical trajectories, divergent reported cost.** gpt-5-2-codex and gpt-5-2-high match on
 17,520 of 17,520 calls across (instance, idx, input, output, reasoning), and every trajectory in
 both requested `openai/gpt-5.2-2025-12-11`. They report $224.71 and $236.78, 5.4% apart, as two
-separate leaderboard rows. Excluded as a duplicate; the $12 is unattributed.
+separate leaderboard rows. Excluded as a duplicate; the $12 is unattributed. Of all five pieces of
+evidence, this is the cleanest single illustration of the central claim: identical work, two
+different reported dollar figures, and nothing in either number tells you that.
 
 ## Second-order findings
 
@@ -129,38 +131,53 @@ across 248 of 500 instances, up to 27 retries on a single instance.
 
 ## How to reproduce
 
-This repo is the analysis code and its output (`data/out/*.csv`) plus the extracted parquet
-(`data/instances/`, `data/calls/`). It is not a runnable package on its own: `config.py` resolves
-its paths as `Path(__file__).parent.parent.parent`, on the assumption that these modules live at
-`analysis/token_waste/` inside a clone of
-[SWE-bench/experiments](https://github.com/SWE-bench/experiments) (that's where
-`evaluation/verified/<entry>/metadata.yaml` and `per_instance_details.json` come from — this repo
-does not ship them). Running the CLI straight from a bare clone of this repo fails: `python -m
-cli` raises `ImportError: attempted relative import with no known parent package` (no package
-context), and even `python -m token_waste.cli` from one directory up finds no entries, silently,
-because `evaluation/` isn't there to find.
-
-To actually run it:
-
 ```
-git clone https://github.com/SWE-bench/experiments.git
-git clone https://github.com/amnry/swe-bench-token-waste.git experiments/analysis/token_waste
-cd experiments
-python -m analysis.token_waste.cli claim1
+git clone --filter=blob:none --no-checkout --depth 1 https://github.com/SWE-bench/experiments.git
+cd experiments && git sparse-checkout init --cone && git sparse-checkout set evaluation/verified && git checkout && cd ..
+
+git clone https://github.com/amnry/swe-bench-token-waste.git
+pip install -r swe-bench-token-waste/requirements.txt
+
+export SWEBENCH_EXPERIMENTS_ROOT="$(pwd)/experiments"
+python -m swe-bench-token-waste.cli claim1
 ```
+
+Run this from the directory that contains both clones as siblings (not from inside either one).
+This is the command actually verified to reproduce the numbers below — see "Verified
+reproduction" — not a guess at what should work.
 
 Network requirements per step:
 
 | Step | Command | Network |
 |---|---|---|
-| Claim 1 | `python -m analysis.token_waste.cli claim1` | none — reads local `metadata.yaml` / `per_instance_details.json` from the `experiments` clone above and the parquet shipped in this repo |
-| Extraction | `python -m analysis.token_waste.extract` | public S3 (streams, caches nothing locally) |
+| Claim 1 | `python -m swe-bench-token-waste.cli claim1` | none at run time — reads the local `metadata.yaml` / `per_instance_details.json` from the `experiments` clone above and the parquet already committed in this repo |
+| Extraction (only needed to regenerate the parquet from scratch) | `python -m swe-bench-token-waste.extract` | public S3, streams, caches nothing locally |
 | Claim 2 pricing/convention | see `cli.py` | none — reads the parquet and yaml already in this repo |
 
-Nothing in this pipeline calls Hugging Face. Claim 1 and the convention detectors run entirely
-against the parquet and CSVs already committed in `data/`, once the `experiments` layout above is
-in place; only re-running extraction from scratch touches the network, and that touches S3, not
-HF.
+Nothing in this pipeline calls Hugging Face; the only step that touches a network is a from-scratch
+re-extraction, and that touches S3, not HF.
+
+**Verified reproduction.** The exact commands above were run in a fresh directory against a clean
+clone of this repo. Output of `claim1_summary.csv`:
+
+```
+n_observed,...,total_cost_observed,unresolved_cost_observed,waste_lower,waste_upper,...
+20441,...,7610.898307406499,4024.1428264469996,0.528734278650252,0.528734278650252,...
+```
+
+20,441 attempts, $7,610.90, $4,024.14, 0.5287 — matches the 20,441 / $7,611 / $4,024 / 52.9%
+reported above.
+
+**Why the layout matters.** `config.py` resolves the SWE-bench/experiments root as
+`SWEBENCH_EXPERIMENTS_ROOT` if set, else `Path(__file__).parent.parent.parent` — a holdover from
+when this code lived at `analysis/token_waste/` inside that fork. Point the env var at a sibling
+clone of `evaluation/verified/` (that's where `metadata.yaml` and `per_instance_details.json`
+live; this repo doesn't ship them) and it works from anywhere. Without the env var, or run from
+the wrong directory, it fails in one of two ways: `python -m cli` from inside the repo raises
+`ImportError: attempted relative import with no known parent package` (no package context to
+resolve the module's own relative imports against); `python -m swe-bench-token-waste.cli` run from
+the right directory but with no `experiments` clone alongside it just returns zero entries, silently,
+because the metadata directory it's looking for doesn't exist.
 
 ## Method and scope
 

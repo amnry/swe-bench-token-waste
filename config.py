@@ -4,9 +4,11 @@ Kept as a single flat module (no environment-driven overrides) so every
 milestone imports the same numbers without needing a config file on disk.
 """
 
+import os
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+_env_root = os.environ.get("SWEBENCH_EXPERIMENTS_ROOT")
+REPO_ROOT = Path(_env_root).resolve() if _env_root else Path(__file__).resolve().parent.parent.parent
 EVALUATION = REPO_ROOT / "evaluation"
 TOKEN_WASTE_DIR = Path(__file__).resolve().parent
 DATA_DIR = TOKEN_WASTE_DIR / "data"

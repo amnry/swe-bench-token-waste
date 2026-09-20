@@ -1,5 +1,3 @@
-data/instances/
-data/calls/
 __pycache__/
 *.pyc
 .venv/

@@ -25,8 +25,14 @@ The sharper framing:
 - cost per unresolved attempt: $0.472
 - ratio: 1.51x
 
-So 42.1% of attempts failed but consumed 52.9% of spend. The failure rate understates the cost of
-failure by about a quarter.
+These two rates are computed over the *priced* subset only — 11,476 resolved-and-priced and 8,524
+unresolved-and-priced attempts (20,000 of 20,441 total; 441 are missing cost data and excluded).
+They are not $0.313 x 11,835 and $0.472 x 8,606 — those are the observed resolved/unresolved
+counts from the paragraph above, a different denominator, and multiplying by them will not
+reproduce $7,611 or $4,024.
+
+So 42.1% of attempts failed but consumed 52.9% of spend (both figures over the full 20,441
+observed). The failure rate understates the cost of failure by about a quarter.
 
 Supporting numbers:
 
@@ -39,10 +45,7 @@ Supporting numbers:
   is expected loss rather than this submission's waste.
 
 Requires no network and no trajectory parsing — computed from `per_instance_details.json` alone.
-
-```
-python -m analysis.token_waste.cli claim1
-```
+See "How to reproduce" below for the exact command and the directory layout it expects.
 
 ## Claim 2 — the primary finding
 
@@ -53,8 +56,8 @@ produced it, and nothing in the number itself reveals which toolchain that was.*
 
 **(a) Version-dependent field meaning.** litellm's normalized `prompt_tokens` for Anthropic is
 read-only-inclusive on mini v1.13.3 (99.78% of cache-traffic calls) and v1.16.0 (99.99%), and
-fully inclusive on v2.0.0. Same provider, same scaffold, opposite meaning, no version note
-anywhere. The same 6 Anthropic entries ($1,786.92 of traffic) price at:
+fully inclusive on v2.0.0. Same provider, same scaffold, opposite meaning; we found no version
+note documenting the change. The same 6 Anthropic entries ($1,786.92 of traffic) price at:
 
 - litellm v2.0.0 meaning: $1,786.35 (-0.0%)
 - litellm v1.13-v1.16 meaning: $1,975.29 (+10.5%; +13.7-18.2% per v2.0.0 entry)
@@ -63,9 +66,12 @@ anywhere. The same 6 Anthropic entries ($1,786.92 of traffic) price at:
 All 6 Anthropic entries show `d_conv = 0.0000` — litellm is perfectly self-consistent with its own
 mapping. The flip costs litellm nothing and costs every downstream consumer 10% to 455%,
 depending on which contract they believe they're reading. Nothing detects it, because from
-litellm's point of view nothing is broken. The +455% column is the same failure class as the
-Drupal `ai_metering` bug (double-charging cached tokens: corrected $0.00032025 vs $0.00091545
-billed on a single call, a 2.9x overstatement, requiring a backfill of every historical row).
+litellm's point of view nothing is broken. This is offered as precedent, not our own finding: the
++455% column is the same failure class as a bug fixed upstream in Drupal's `ai_metering` module,
+where cached tokens from OpenAI and Gemini were charged twice in estimated-cost calculations
+(stored token counts and quota consumption were unaffected), corrected in the 1.0.2 release —
+[project page](https://www.drupal.org/project/ai_metering), see the 1.0.2 release notes for the
+fix.
 
 **(b) Adapter-dependent arithmetic, reproduced not inferred.** minimax-2.5's run-time reported
 cost equals `R'_conv` plus reasoning-as-output to the cent: $36.86 vs $36.64. litellm's MiniMax
@@ -123,17 +129,38 @@ across 248 of 500 instances, up to 27 retries on a single instance.
 
 ## How to reproduce
 
-Commands per milestone, with network requirements:
+This repo is the analysis code and its output (`data/out/*.csv`) plus the extracted parquet
+(`data/instances/`, `data/calls/`). It is not a runnable package on its own: `config.py` resolves
+its paths as `Path(__file__).parent.parent.parent`, on the assumption that these modules live at
+`analysis/token_waste/` inside a clone of
+[SWE-bench/experiments](https://github.com/SWE-bench/experiments) (that's where
+`evaluation/verified/<entry>/metadata.yaml` and `per_instance_details.json` come from — this repo
+does not ship them). Running the CLI straight from a bare clone of this repo fails: `python -m
+cli` raises `ImportError: attempted relative import with no known parent package` (no package
+context), and even `python -m token_waste.cli` from one directory up finds no entries, silently,
+because `evaluation/` isn't there to find.
 
-| Milestone | Command | Network |
+To actually run it:
+
+```
+git clone https://github.com/SWE-bench/experiments.git
+git clone https://github.com/amnry/swe-bench-token-waste.git experiments/analysis/token_waste
+cd experiments
+python -m analysis.token_waste.cli claim1
+```
+
+Network requirements per step:
+
+| Step | Command | Network |
 |---|---|---|
-| Claim 1 | `python -m analysis.token_waste.cli claim1` | none |
+| Claim 1 | `python -m analysis.token_waste.cli claim1` | none — reads local `metadata.yaml` / `per_instance_details.json` from the `experiments` clone above and the parquet shipped in this repo |
 | Extraction | `python -m analysis.token_waste.extract` | public S3 (streams, caches nothing locally) |
-| Claim 2 pricing/convention | see `cli.py` | HF for some entry metadata; otherwise local parquet |
+| Claim 2 pricing/convention | see `cli.py` | none — reads the parquet and yaml already in this repo |
 
-Claim 1 needs neither S3 nor HF. Extraction streams from public S3 and caches nothing locally.
-This repo ships the extracted parquet under `data/`, so Claim 1 and the convention detectors run
-against the included data with no network access.
+Nothing in this pipeline calls Hugging Face. Claim 1 and the convention detectors run entirely
+against the parquet and CSVs already committed in `data/`, once the `experiments` layout above is
+in place; only re-running extraction from scratch touches the network, and that touches S3, not
+HF.
 
 ## Method and scope
 

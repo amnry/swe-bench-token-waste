@@ -1,0 +1,93 @@
+# Curated, hand-maintained. Same discipline as prices.yaml: every flag carries
+# source_url + verified. An unverified flag is never applied -- code treats it
+# as "no answer" (provenance 'unknown'), not as a default.
+#
+# These describe the provider's RAW API. The trajs contain litellm's
+# NORMALIZED usage, whose mapping has changed across litellm versions --
+# e.g. Anthropic prompt_tokens is exclusive of cache reads on mini v1.13.3
+# and inclusive on mini v2.0.0. That is detected per entry from the data
+# (cache_convention.py); these flags are the reference to compare against.
+#
+# Per-model reasoning classification lives in
+# data/out/reasoning_convention_by_model.csv (generated), not here.
+
+anthropic:
+  raw_input_includes_cached:
+    value: false
+    verified: true
+    source_url: https://platform.claude.com/docs/en/build-with-claude/prompt-caching
+    quote: "input_tokens: Number of input tokens which were not read from or used to create a cache (that is, tokens after the last cache breakpoint). total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens"
+  cache_write_billed:
+    default: true
+    verified: true
+    source_url: https://platform.claude.com/docs/en/build-with-claude/prompt-caching
+    quote: "5-minute cache write tokens are 1.25 times the base input tokens price; 1-hour cache write tokens are 2 times the base input tokens price; Cache read tokens are 0.1 times the base input tokens price"
+  reasoning_in_output:
+    value: true
+    verified: true
+    source_url: https://platform.claude.com/docs/en/build-with-claude/token-counting
+    note: Extended thinking tokens bill as output at output rates and are included in output_tokens. 0 violations over 88,114 calls.
+
+openai:
+  raw_input_includes_cached:
+    value: true
+    verified: true
+    source_url: https://developers.openai.com/api/docs/guides/prompt-caching
+    note: cached_tokens is reported under prompt_tokens_details / input_tokens_details, i.e. a subset of prompt_tokens / input_tokens. 0 calls with input < cached over 73,610 calls.
+  cache_write_billed:
+    default: false
+    billed_from_models: ["gpt-5.6", "gpt-5-6", "gpt-6"]
+    verified: true
+    source_url: https://developers.openai.com/api/docs/guides/prompt-caching
+    quote: "For GPT-5.6 and later, cache writes cost 1.25x the standard, uncached input-token rate. [Earlier models, incl. GPT-5.5/5.5 Pro:] No additional cache-write charge."
+    note: All 3 B_responses entries and every OpenAI B_chat entry in this corpus predate GPT-5.6. Re-verify before any 5.6+ entry lands.
+  reasoning_in_output:
+    value: true
+    verified: true
+    source_url: https://docs.litellm.ai/docs/completion/token_usage
+    note: OpenAI standard (litellm normalizes to it) - reasoning_tokens is a subset of output_tokens. 0 violations over 73,610 calls. platform.openai.com API reference 403s to fetch; re-cite directly at M5 writeup.
+
+google:
+  raw_input_includes_cached:
+    value: true
+    verified: false
+    source_url: https://ai.google.dev/gemini-api/docs/generate-content/tokens
+    note: cachedContentTokenCount documented as part of promptTokenCount; not re-fetched this session. Empirically 0 calls with input < cached over 93,359 calls.
+  cache_write_billed:
+    default: null
+    verified: false
+    source_url: null
+    note: Gemini explicit caching bills storage per hour, not per write token; implicit caching has no write charge. Not modelled - no Gemini call in this corpus reports a cache_write field at all.
+  reasoning_in_output:
+    value: null
+    verified: false
+    source_url: https://github.com/BerriAI/litellm/issues/24526
+    note: Google's own docs disagree (Gemini API vs Vertex AI on whether candidatesTokenCount includes thoughtsTokenCount). See per-model CSV.
+
+minimax:
+  cache_write_billed: {default: null, verified: false, source_url: null}
+  reasoning_in_output: {value: null, verified: false, source_url: https://github.com/BerriAI/litellm/issues/24526, note: "No MiniMax doc found. See per-model CSV."}
+
+zhipu:
+  cache_write_billed: {default: null, verified: false, source_url: null}
+  reasoning_in_output: {value: null, verified: false, source_url: https://github.com/BerriAI/litellm/issues/24526, note: "No GLM doc found. See per-model CSV."}
+
+moonshot:
+  cache_write_billed: {default: null, verified: false, source_url: null}
+  reasoning_in_output: {value: null, verified: false, source_url: https://github.com/BerriAI/litellm/issues/24526, note: "No Kimi doc found. See per-model CSV."}
+
+deepseek:
+  cache_write_billed: {default: null, verified: false, source_url: null}
+  reasoning_in_output: {value: null, verified: false, source_url: null, note: "See per-model CSV."}
+
+mistral:
+  cache_write_billed: {default: null, verified: false, source_url: null}
+  reasoning_in_output: {value: null, verified: false, source_url: null, note: "no_evidence - 0 calls with both reasoning and output measured."}
+
+alibaba:
+  cache_write_billed: {default: null, verified: false, source_url: null}
+  reasoning_in_output: {value: null, verified: false, source_url: null, note: "A_dollar only in this corpus; no per-call data."}
+
+meta:
+  cache_write_billed: {default: null, verified: false, source_url: null}
+  reasoning_in_output: {value: null, verified: false, source_url: null, note: "Hosting provider not identifiable from model name; A_dollar only."}

@@ -1,0 +1,39 @@
+# litellm model_prices_and_context_window.json commits pinned per submission
+# date: the last commit touching the file on or before that date. Snapshots
+# are cached (gitignored) under data/litellm_prices/<sha>.json.
+'2025-09-29':
+  commit_date: '2025-09-29T22:09:40Z'
+  sha: 05955042d57fcc32c73223221d69c8336ecd5994
+'2025-11-18':
+  commit_date: '2025-11-18T19:35:56Z'
+  sha: 9ec31bdd5b6c334f5891914e7fa7587230ec23fe
+'2025-11-20':
+  commit_date: '2025-11-20T04:24:31Z'
+  sha: c3143e388e300c61d96de8162ea208f2f0dc2fd5
+'2025-11-24':
+  commit_date: '2025-11-24T22:30:36Z'
+  sha: a807fe4450b1f7a5f41be5762b8918761dd9dae2
+'2025-12-01':
+  commit_date: '2025-12-01T22:14:41Z'
+  sha: f434ca61ec0c637ba676fb90336ff154a992793b
+'2025-12-09':
+  commit_date: '2025-12-09T02:57:43Z'
+  sha: b673177b22c3860ea878bc2442de2bb5bed69485
+'2025-12-10':
+  commit_date: '2025-12-10T16:58:50Z'
+  sha: ad45fc7cce2e93c2b9eec02353e92ffe26ebf610
+'2025-12-11':
+  commit_date: '2025-12-11T23:43:11Z'
+  sha: 1d85242877b31b47568d32e9567e3443a121aa57
+'2026-02-17':
+  commit_date: '2026-02-17T19:46:44Z'
+  sha: c7fbab4549669b81bcbce77bf071eb5b6e70a462
+'2026-02-19':
+  commit_date: '2026-02-19T18:17:27Z'
+  sha: 26d27803eb487a1b6b7881e2bdb74775b23c824b
+'2026-02-26':
+  commit_date: '2026-02-26T20:41:59Z'
+  sha: f24a41898bba81bdb047e84fd66c1c9bc0f09832
+'2026-09-01':
+  commit_date: '2026-09-01T20:19:46Z'
+  sha: d568bbe58d5d94929661af951270150a46560df2

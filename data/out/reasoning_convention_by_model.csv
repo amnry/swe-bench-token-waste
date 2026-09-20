@@ -1,0 +1,24 @@
+model,provider,classification,confidence,n_calls,n_both_measured,n_violating,violation_pct,extra_reasoning_tokens,est_dollar_undercount_ROUGH_PROXY_not_a_claim2_number,unpriced_reasoning_tokens,entries,note
+claude-haiku-4-5-20251001,anthropic,subset,clear,33059,33059,0,0.0,,,,20260217_mini-v2.0.0_claude-4-5-haiku-high,
+claude-opus-4-5-20251101,anthropic,subset,clear,35467,16446,0,0.0,,,,20251124_mini-v1.16.0_claude-opus-4-5-20251101;20260217_mini-v2.0.0_claude-4-5-opus-high,
+claude-opus-4-6,anthropic,subset,clear,14466,14466,0,0.0,,,,20260217_mini-v2.0.0_claude-4-6-opus,
+claude-sonnet-4-20250514,anthropic,no_evidence,n/a,25494,0,0,,,,,20250929_mini-v1.13.3_sonnet-4-5-20250929,
+claude-sonnet-4-5-20250929,anthropic,subset,clear,24143,24143,0,0.0,,,,20260217_mini-v2.0.0_claude-4-5-sonnet-high,
+deepseek-reasoner,deepseek,subset,clear,23202,23202,0,0.0,,,,20251201_mini-v1.17.1_deepseek-v3.2-reasoner,
+deepseek/deepseek-v3.2,deepseek,additive,ambiguous,43683,43683,6,0.014,7941114,1.49,0,20260217_mini-v2.0.0_deepseek-3-2-high,"proxy = entry reported $ / entry (input_raw+output) tokens, x extra reasoning tokens; blended rate, ignores cached-vs-uncached input pricing; sized to show immateriality only"
+gemini-3-5-flash-fair,google,additive,clear,19514,19514,11148,57.128,5563329,0.0,5563329,20260901_mini-v2.4.2_gemini-3-5-flash,"proxy = entry reported $ / entry (input_raw+output) tokens, x extra reasoning tokens; blended rate, ignores cached-vs-uncached input pricing; sized to show immateriality only"
+gemini-3-flash-preview,google,subset,clear,28054,28054,0,0.0,,,,20260217_mini-v2.0.0_gemini-3-flash-high,
+gemini-3-pro-preview,google,additive,ambiguous,26207,26207,20,0.076,6942958,4.24,0,20251118_mini-v1.15.0_gemini-3-pro-preview-20251118;20260226_mini-v2.0.0_gemini-3-pro-high,"proxy = entry reported $ / entry (input_raw+output) tokens, x extra reasoning tokens; blended rate, ignores cached-vs-uncached input pricing; sized to show immateriality only"
+google/gemini-3-pro-preview,google,subset,clear,19584,19584,0,0.0,,,,20251118_mini-v1.15.0_gemini-3-pro-preview-20251118,
+minimax/minimax-m2,minimax,additive,clear,37069,37069,1493,4.028,15086789,4.43,0,20251124_mini-v1.17.0_minimax-m2,"proxy = entry reported $ / entry (input_raw+output) tokens, x extra reasoning tokens; blended rate, ignores cached-vs-uncached input pricing; sized to show immateriality only"
+minimax/minimax-m2.5,minimax,additive,ambiguous,30219,30219,14,0.046,2127164,0.13,0,20260217_mini-v2.0.0_minimax-2-5-high,"proxy = entry reported $ / entry (input_raw+output) tokens, x extra reasoning tokens; blended rate, ignores cached-vs-uncached input pricing; sized to show immateriality only"
+devstral-2512,mistral,no_evidence,n/a,37543,0,0,,,,,20251209_mini-v1.17.2_devstral-2512,
+labs-devstral-small-2512,mistral,no_evidence,n/a,43433,0,0,,,,,20251209_mini-v1.17.2_devstral-small-2512,
+moonshot/kimi-k2-thinking,moonshot,no_evidence,n/a,23410,0,0,,,,,20251210_mini-v1.17.2_kimi-k2-thinking,
+moonshotai/kimi-k2.5,moonshot,additive,clear,24687,24687,399,1.616,1805760,0.29,0,20260217_mini-v2.0.0_kimi-k2-5-high,"proxy = entry reported $ / entry (input_raw+output) tokens, x extra reasoning tokens; blended rate, ignores cached-vs-uncached input pricing; sized to show immateriality only"
+gpt-5-mini-2025-08-07,openai,subset,clear,10054,10054,0,0.0,,,,20260217_mini-v2.0.0_gpt-5-mini,
+gpt-5.1-2025-11-13,openai,subset,clear,10500,10500,0,0.0,,,,20251120_mini-v1.15.0_gpt-5.1-2025-11-13,
+gpt-5.1-codex,openai,no_evidence,n/a,11941,0,0,,,,,20251124_mini-v1.16.0_gpt-5.1-codex,
+gpt-5.2-2025-12-11,openai,subset,clear,53056,53056,0,0.0,,,,20251211_mini-v1.17.2_gpt-5.2-2025-12-11;20251211_mini-v1.17.2_gpt-5.2-2025-12-11-high;20260217_mini-v2.0.0_gpt-5-2-high;20260219_mini-v2.0.0_gpt-5-2-codex,
+glm-4.6,zhipu,no_evidence,n/a,24674,0,0,,,,,20251201_mini-v1.17.1_glm-4.6,
+z-ai/glm-5,zhipu,additive,clear,38013,38013,817,2.149,2369173,0.76,0,20260217_mini-v2.0.0_glm-5-high,"proxy = entry reported $ / entry (input_raw+output) tokens, x extra reasoning tokens; blended rate, ignores cached-vs-uncached input pricing; sized to show immateriality only"

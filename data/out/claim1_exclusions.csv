@@ -1,0 +1,8 @@
+entry,reason_excluded,has_per_instance_details,reported_cost,reported_resolved_pct
+20250720_mini-v0.0.0-Llama-4-Scout-17B-Instruct,no per_instance_details.json in repo,False,57.8157615,9.06
+20250720_mini-v0.0.0-gpt-4o-2024-11-20,no per_instance_details.json in repo,False,765.5740625000001,21.62
+20250720_mini-v0.0.0_gpt-4.1-mini-2025-04-14,no per_instance_details.json in repo,False,217.57707639999998,23.94
+20250726_mini-v1.0.0_gemini-2.0-flash,no per_instance_details.json in repo,False,0.0,13.52
+20250726_mini-v1.0.0_gemini-2.5-flash,no per_instance_details.json in repo,False,66.942859175,28.73
+20250726_mini-v1.0.0_gpt-4.1-2025-04-14,no per_instance_details.json in repo,False,73.156562,39.58
+20260219_mini-v2.0.0_gpt-5-2-codex,no per_instance_details.json in repo,False,224.71194935,72.8

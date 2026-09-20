@@ -1,0 +1,179 @@
+# Curated prices for models carrying material dollar share (see README).
+# USD per million tokens. Every row: source_url + verified. effective_from is
+# the earliest date the cited page is known to have shown this rate; where
+# only the CURRENT page was checked, effective_from is null and
+# verified_at_submission_date is false -- pricing.py's R'_conv (litellm table
+# pinned to the submission-date commit) is the cross-check for staleness.
+#
+# Covered: 7 models = 68.3% of B-tier reported $ (gpt-5.2 16.8, opus-4-5 14.5,
+# gemini-3-pro 13.9, sonnet-4-5 6.5, gpt-5.1-codex 5.8, sonnet-4 5.5,
+# opus-4-6 5.4) + 3 same-vendor adds (gemini-3-flash 3.5, haiku-4-5 3.2,
+# gpt-5.1 3.0) = 78.1%. Remaining 21.9% (GLM, DeepSeek, Kimi, MiniMax) is
+# priced from litellm's table only (R'_conv), never from this file.
+#
+# cache_write_5m / cache_write_1h: Anthropic only. All cache writes are priced
+# at the 5m tier (plan.md assumption 2); the 1h delta is reported as one
+# sensitivity number. OpenAI pre-5.6 writes are not billed (provider_flags).
+# long_ctx_*: threshold-tiered rates above 200k input, if any. null = none
+# found on the cited page for that model; pricing.py flags >200k calls and
+# the 5% gate decides whether this matters.
+
+- provider: anthropic
+  model: claude-opus-4-5-20251101
+  input_per_m: 5.00
+  cached_input_per_m: 0.50
+  cache_write_5m_per_m: 6.25
+  cache_write_1h_per_m: 10.00
+  output_per_m: 25.00
+  long_ctx_threshold: null
+  long_ctx_input_per_m: null
+  long_ctx_output_per_m: null
+  effective_from: null
+  source_url: https://platform.claude.com/docs/en/about-claude/pricing
+  verified: true
+  verified_at_submission_date: false
+  note: "Row 'Claude Opus 4.5 | $5 | $6.25 | $10 | $0.50 | $25' fetched 2026-09-19. Entries: 20251124 (v1.16.0), 20260217 (v2.0.0)."
+
+- provider: anthropic
+  model: claude-opus-4-6
+  input_per_m: 5.00
+  cached_input_per_m: 0.50
+  cache_write_5m_per_m: 6.25
+  cache_write_1h_per_m: 10.00
+  output_per_m: 25.00
+  long_ctx_threshold: null
+  long_ctx_input_per_m: null
+  long_ctx_output_per_m: null
+  effective_from: null
+  source_url: https://platform.claude.com/docs/en/about-claude/pricing
+  verified: true
+  verified_at_submission_date: false
+  note: "Row 'Claude Opus 4.6 | $5 | $6.25 | $10 | $0.50 | $25'. Page: 4.6+ include 1M context at standard pricing."
+
+- provider: anthropic
+  model: claude-sonnet-4-5-20250929
+  input_per_m: 3.00
+  cached_input_per_m: 0.30
+  cache_write_5m_per_m: 3.75
+  cache_write_1h_per_m: 6.00
+  output_per_m: 15.00
+  long_ctx_threshold: 200000
+  long_ctx_input_per_m: null
+  long_ctx_output_per_m: null
+  effective_from: null
+  source_url: https://platform.claude.com/docs/en/about-claude/pricing
+  verified: true
+  verified_at_submission_date: false
+  note: "Row 'Claude Sonnet 4.5 | $3 | $3.75 | $6 | $0.30 | $15'. A >200k premium (2x in / 1.5x out) existed for Sonnet 4.5 at launch; not on the current page. UNVERIFIED for the 20260217 submission date -- resolve only if the long-ctx gate trips."
+
+- provider: anthropic
+  model: claude-sonnet-4-20250514
+  input_per_m: 3.00
+  cached_input_per_m: 0.30
+  cache_write_5m_per_m: 3.75
+  cache_write_1h_per_m: 6.00
+  output_per_m: 15.00
+  long_ctx_threshold: null
+  long_ctx_input_per_m: null
+  long_ctx_output_per_m: null
+  effective_from: null
+  source_url: https://platform.claude.com/docs/en/about-claude/pricing
+  verified: true
+  verified_at_submission_date: false
+  note: "Row 'Claude Sonnet 4 (retired) | $3 | $3.75 | $6 | $0.30 | $15'. This is the ANSWERING model of the one confirmed fallback (20250929 requested sonnet-4-5). Same rate as 4.5 -> the fallback is $-neutral."
+
+- provider: anthropic
+  model: claude-haiku-4-5-20251001
+  input_per_m: 1.00
+  cached_input_per_m: 0.10
+  cache_write_5m_per_m: 1.25
+  cache_write_1h_per_m: 2.00
+  output_per_m: 5.00
+  long_ctx_threshold: null
+  long_ctx_input_per_m: null
+  long_ctx_output_per_m: null
+  effective_from: null
+  source_url: https://platform.claude.com/docs/en/about-claude/pricing
+  verified: true
+  verified_at_submission_date: false
+  note: "Row 'Claude Haiku 4.5 | $1 | $1.25 | $2 | $0.10 | $5'."
+
+- provider: openai
+  model: gpt-5.2-2025-12-11
+  input_per_m: 1.75
+  cached_input_per_m: 0.175
+  cache_write_5m_per_m: 0.0
+  cache_write_1h_per_m: 0.0
+  output_per_m: 14.00
+  long_ctx_threshold: null
+  long_ctx_input_per_m: null
+  long_ctx_output_per_m: null
+  effective_from: null
+  source_url: https://developers.openai.com/api/docs/pricing
+  verified: true
+  verified_at_submission_date: false
+  note: "Row 'gpt-5.2 | $1.75 | $0.175 | $14.00'. Cache writes $0 pre-5.6 (provider_flags). 4 entries incl. 20260219_gpt-5-2-codex, whose trajs requested plain gpt-5.2 (see README anomaly)."
+
+- provider: openai
+  model: gpt-5.1-2025-11-13
+  input_per_m: 1.25
+  cached_input_per_m: 0.125
+  cache_write_5m_per_m: 0.0
+  cache_write_1h_per_m: 0.0
+  output_per_m: 10.00
+  long_ctx_threshold: null
+  long_ctx_input_per_m: null
+  long_ctx_output_per_m: null
+  effective_from: null
+  source_url: https://developers.openai.com/api/docs/pricing
+  verified: true
+  verified_at_submission_date: false
+  note: "Row 'gpt-5.1 | $1.25 | $0.125 | $10.00'."
+
+- provider: openai
+  model: gpt-5.1-codex
+  input_per_m: 1.25
+  cached_input_per_m: 0.125
+  cache_write_5m_per_m: 0.0
+  cache_write_1h_per_m: 0.0
+  output_per_m: 10.00
+  long_ctx_threshold: null
+  long_ctx_input_per_m: null
+  long_ctx_output_per_m: null
+  effective_from: null
+  source_url: https://developers.openai.com/api/docs/pricing
+  verified: false
+  verified_at_submission_date: false
+  note: "NOT on the current pricing page (only gpt-5.3-codex listed). Rate ASSUMED equal to gpt-5.1 (codex variants have historically matched their base model). 5.8% of $ -- needs archive or litellm-table confirmation before R'_full uses it."
+
+- provider: google
+  model: gemini-3-pro-preview
+  input_per_m: 2.00
+  cached_input_per_m: 0.20
+  cache_write_5m_per_m: 0.0
+  cache_write_1h_per_m: null
+  output_per_m: 12.00
+  long_ctx_threshold: 200000
+  long_ctx_input_per_m: 4.00
+  long_ctx_output_per_m: 18.00
+  effective_from: "2025-11-20"
+  source_url: https://web.archive.org/web/20260217id_/https://ai.google.dev/gemini-api/docs/pricing
+  verified: true
+  verified_at_submission_date: true
+  note: "Wayback captures 2025-11-20 and 2026-02-17 agree verbatim: 'Input $2.00, prompts <= 200k / $4.00 > 200k; Output (including thinking) $12.00 / $18.00; Context caching $0.20 / $0.40 + $4.50/1M tokens/hour storage'. Cache write: Gemini bills storage per hour, not per write token; not modelled (no Gemini call reports a write field). Cached >200k rate ($0.40) not modelled -- long-ctx gate."
+
+- provider: google
+  model: gemini-3-flash-preview
+  input_per_m: 0.50
+  cached_input_per_m: 0.05
+  cache_write_5m_per_m: 0.0
+  cache_write_1h_per_m: null
+  output_per_m: 3.00
+  long_ctx_threshold: null
+  long_ctx_input_per_m: null
+  long_ctx_output_per_m: null
+  effective_from: "2026-02-17"
+  source_url: https://web.archive.org/web/20260217id_/https://ai.google.dev/gemini-api/docs/pricing
+  verified: true
+  verified_at_submission_date: true
+  note: "Wayback capture 2026-02-17 (= submission date): 'Input $0.50 (text); Output (including thinking) $3.00; Context caching $0.05 + $1.00/1M tokens/hour storage'."

@@ -135,30 +135,33 @@ across 248 of 500 instances, up to 27 retries on a single instance.
 git clone --filter=blob:none --no-checkout --depth 1 https://github.com/SWE-bench/experiments.git
 cd experiments && git sparse-checkout init --cone && git sparse-checkout set evaluation/verified && git checkout && cd ..
 
-git clone https://github.com/amnry/swe-bench-token-waste.git
-pip install -r swe-bench-token-waste/requirements.txt
+git clone https://github.com/amnry/swe-bench-token-waste.git token_waste
+pip install -r token_waste/requirements.txt
 
 export SWEBENCH_EXPERIMENTS_ROOT="$(pwd)/experiments"
-python -m swe-bench-token-waste.cli claim1
+python -m token_waste.cli claim1
 ```
 
-Run this from the directory that contains both clones as siblings (not from inside either one).
-This is the command actually verified to reproduce the numbers below — see "Verified
-reproduction" — not a guess at what should work.
+The `token_waste` in `git clone ... token_waste` is a local directory alias, not a rename of the
+GitHub repo — it's needed because `python -m <dir>.cli` requires `<dir>` to be a valid Python
+module name, and `swe-bench-token-waste` (hyphens) is not one; `token_waste` (underscore) is. Run
+this from the directory that contains both clones as siblings (not from inside either one). This
+is the command actually verified to reproduce the numbers below — see "Verified reproduction" —
+not a guess at what should work.
 
 Network requirements per step:
 
 | Step | Command | Network |
 |---|---|---|
-| Claim 1 | `python -m swe-bench-token-waste.cli claim1` | none at run time — reads the local `metadata.yaml` / `per_instance_details.json` from the `experiments` clone above and the parquet already committed in this repo |
-| Extraction (only needed to regenerate the parquet from scratch) | `python -m swe-bench-token-waste.extract` | public S3, streams, caches nothing locally |
+| Claim 1 | `python -m token_waste.cli claim1` | none at run time — reads the local `metadata.yaml` / `per_instance_details.json` from the `experiments` clone above and the parquet already committed in this repo |
+| Extraction (only needed to regenerate the parquet from scratch) | `python -m token_waste.extract` | public S3, streams, caches nothing locally |
 | Claim 2 pricing/convention | see `cli.py` | none — reads the parquet and yaml already in this repo |
 
 Nothing in this pipeline calls Hugging Face; the only step that touches a network is a from-scratch
 re-extraction, and that touches S3, not HF.
 
-**Verified reproduction.** The exact commands above were run in a fresh directory against a clean
-clone of this repo. Output of `claim1_summary.csv`:
+**Verified reproduction.** The exact commands above (directory aliased `token_waste`) were run in a
+fresh temp directory against a clean clone of this repo. Output of `claim1_summary.csv`:
 
 ```
 n_observed,...,total_cost_observed,unresolved_cost_observed,waste_lower,waste_upper,...
@@ -175,9 +178,13 @@ clone of `evaluation/verified/` (that's where `metadata.yaml` and `per_instance_
 live; this repo doesn't ship them) and it works from anywhere. Without the env var, or run from
 the wrong directory, it fails in one of two ways: `python -m cli` from inside the repo raises
 `ImportError: attempted relative import with no known parent package` (no package context to
-resolve the module's own relative imports against); `python -m swe-bench-token-waste.cli` run from
-the right directory but with no `experiments` clone alongside it just returns zero entries, silently,
-because the metadata directory it's looking for doesn't exist.
+resolve the module's own relative imports against); `python -m token_waste.cli` run from the right
+directory but with no `experiments` clone alongside it just returns zero entries, silently,
+because the metadata directory it's looking for doesn't exist. Cloning as `swe-bench-token-waste`
+(the repo's actual name, hyphenated) instead of aliasing to `token_waste` doesn't just risk failure
+— relying on hyphens working with `-m` is an undocumented quirk of how Python's import machinery
+resolves module names given as strings, not something to depend on in a reproducibility artifact,
+so the commands above alias the clone explicitly.
 
 ## Method and scope
 

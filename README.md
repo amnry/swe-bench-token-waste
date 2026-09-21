@@ -156,6 +156,7 @@ Network requirements per step:
 | Claim 1 | `python -m token_waste.cli claim1` | none at run time — reads the local `metadata.yaml` / `per_instance_details.json` from the `experiments` clone above and the parquet already committed in this repo |
 | Extraction (only needed to regenerate the parquet from scratch) | `python -m token_waste.extract` | public S3, streams, caches nothing locally |
 | Claim 2 pricing/convention | see `cli.py` | none — reads the parquet and yaml already in this repo |
+| M6 cost-asymmetry analysis | `python -m token_waste.cli metrics` | none — reads the same `per_instance_details.json` as Claim 1 joined to the committed parquet; writes `data/out/m6_*.csv`. Figures: `python -m token_waste.viz` → `data/out/figures/` |
 
 Nothing in this pipeline calls Hugging Face; the only step that touches a network is a from-scratch
 re-extraction, and that touches S3, not HF.
@@ -228,12 +229,41 @@ Pricing consumes the per-entry detection, never the provider-level flag.
   collapsed to routing prefixes and snapshot aliases, leaving one real fallback (sonnet-4-5 to
   sonnet-4) which is dollar-neutral since both share a rate.
 
-## What is next (M6)
+## M6 — why failure is expensive, and whether it survives the accounting problems
 
-1. Why do failed attempts cost 1.51x successes? Candidate mechanisms: turn-limit exhaustion,
-   context growth over the trajectory, reasoning burned on unsolvable instances. This is the
-   bridge from Claim 1 to Claim 2.
-2. Does `n_calls_unaccounted` correlate with resolution? Kimi's 902 tool-call-format retries
-   across 248/500 instances is the test case.
-3. Does the reasoning undercount concentrate in resolved or unresolved instances? If not, 52.9%
-   stands unchanged and we say so explicitly.
+The bridge from Claim 1 to Claim 2. Three questions, computed by
+`python -m token_waste.cli metrics` (tables in `data/out/m6_*.csv`, figures in
+`data/out/figures/`).
+
+**1. Why do failed attempts cost 1.51x successes? One root cause — failures run longer
+trajectories — and turn-limit exhaustion is *not* it.** The pooled ratio decomposes
+multiplicatively as `cost/attempt = calls x cost-per-call = 1.34x x 1.13x`. Within-entry (which
+removes the model/price confound) the median split is ~57% turns / ~43% pricier-per-turn, and in
+**all 39** entries with both classes failures both take more turns *and* cost more per turn. The
+two channels are the same mechanism: mini-swe-agent re-sends the full history every turn, so total
+input tokens scale with turn count at an exponent of **~1.80** (near-quadratic), and
+`corr(calls, input-per-call) = 0.82`. First-call input is identical across classes (ratio 1.03 —
+same task prompt), so the divergence is purely accumulated context. Turn-limit exhaustion is
+rejected: only **7.3%** of unresolved attempts died at a limit/error (`LimitsExceeded` 3.3%,
+`APIError` 2.9%, `exit_cost` 0.4%); 83% still exit `Submitted` with a wrong answer. Failures flail
+longer, they don't hit a wall. (`m6_cost_asymmetry_by_entry.csv`, `figures/q1_cost_asymmetry.png`.)
+
+**2. Does `n_calls_unaccounted` correlate with resolution? No.** Pooled
+`corr(resolved, unaccounted) = -0.008`. For the Kimi test case (confirmed: 902 retries across
+exactly 248/500, max 27 on one instance) resolution is **70.2% with retries vs 71.4% without** —
+indistinguishable. Unaccounted "no tool call in response" retries are 0.275% of tier-B calls and
+outcome-neutral: a telemetry artifact, not a driver of the cost gap.
+(`m6_unaccounted_by_entry.csv`, `figures/q2_unaccounted.png`.)
+
+**3. Does the reasoning undercount concentrate in unresolved instances? Marginally, and
+immaterially — the 52.9% waste figure stands unchanged.** Reasoning tokens are only +3.8pp more
+skewed to unresolved than cost is (52.2% vs 48.4% within the reasoning-bearing subset). Failed
+attempts do reason 2.1x more per attempt — which *reinforces* finding 1 — but reasoning is 0.15%
+of dollars, so attributing 100% of the ~$11.34 reasoning proxy to unresolved shifts waste by
+**+0.07pp**. The `reasoning_exceeds_output` telemetry violation is itself outcome-neutral (9.4% of
+unresolved vs 10.6% of resolved instances), confirming it is an adapter fingerprint, not a failure
+mode. (`m6_reasoning_concentration_by_entry.csv`, `figures/q3_reasoning.png`.)
+
+**Through-line.** The expensive-failure result is real and mechanistic (trajectory length →
+super-linear context cost) and is *independent* of the accounting problems: both telemetry
+artifacts that could have contaminated it are outcome-neutral, so 52.9% survives M6 intact.

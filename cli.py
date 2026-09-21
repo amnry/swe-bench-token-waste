@@ -11,6 +11,7 @@ import csv
 import sys
 
 from . import claim1
+from . import metrics
 from .entries import select_entries
 from .extract import extract_entry, print_report
 from . import pricing
@@ -117,6 +118,18 @@ def _cmd_price(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_metrics(args: argparse.Namespace) -> int:
+    written = metrics.run()
+    for name, path in sorted(written.items()):
+        print(f"wrote {path}", file=sys.stderr)
+    try:
+        with open(written["m6_summary.csv"], newline="") as f:
+            print(f.read())
+    except (KeyError, OSError):
+        pass
+    return 0
+
+
 def _not_implemented(name: str):
     def _cmd(args: argparse.Namespace) -> int:
         print(f"'{name}' is not implemented yet (see plan.md milestones).", file=sys.stderr)
@@ -145,7 +158,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_price = sub.add_parser("price", help="Dual-run pricing (litellm-pinned vs curated). Network for pins.")
     p_price.set_defaults(func=_cmd_price)
 
-    for name in ("metrics", "check", "all"):
+    p_metrics = sub.add_parser("metrics", help="Build M6 (Claim 2 / cost-asymmetry) CSVs. No network.")
+    p_metrics.set_defaults(func=_cmd_metrics)
+
+    for name in ("check", "all"):
         p = sub.add_parser(name, help="(not yet implemented)")
         p.set_defaults(func=_not_implemented(name))
 

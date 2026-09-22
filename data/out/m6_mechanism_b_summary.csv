@@ -1,0 +1,2 @@
+n_instances_resolved,n_instances_unresolved,mean_total_input_tokens_resolved,median_total_input_tokens_resolved,mean_total_input_tokens_unresolved,median_total_input_tokens_unresolved,unresolved_over_resolved_ratio
+8162,4268,777955.7374418034,490217.0,1501055.778819119,872311.5,1.9294873815766524

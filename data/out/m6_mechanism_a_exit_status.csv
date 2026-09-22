@@ -1,0 +1,8 @@
+outcome,exit_status,n,pct_of_outcome
+resolved,Submitted,8492,100.0
+unresolved,Submitted,4269,95.954
+unresolved,LimitsExceeded,161,3.619
+unresolved,ServiceUnavailableError,14,0.315
+unresolved,RetryError,3,0.067
+unresolved,APIError,1,0.022
+unresolved,Timeout,1,0.022

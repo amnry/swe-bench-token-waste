@@ -228,12 +228,71 @@ Pricing consumes the per-entry detection, never the provider-level flag.
   collapsed to routing prefixes and snapshot aliases, leaving one real fallback (sonnet-4-5 to
   sonnet-4) which is dollar-neutral since both share a rate.
 
-## What is next (M6)
+## M6: why failed attempts cost more
 
-1. Why do failed attempts cost 1.51x successes? Candidate mechanisms: turn-limit exhaustion,
-   context growth over the trajectory, reasoning burned on unsolvable instances. This is the
-   bridge from Claim 1 to Claim 2.
-2. Does `n_calls_unaccounted` correlate with resolution? Kimi's 902 tool-call-format retries
-   across 248/500 instances is the test case.
-3. Does the reasoning undercount concentrate in resolved or unresolved instances? If not, 52.9%
-   stands unchanged and we say so explicitly.
+Scope: the 26 B-tier entries that carry both per-call tokens and a `per_instance_details.json`
+(one calls-parquet entry, `20260219_mini-v2.0.0_gpt-5-2-codex`, has no per_instance_details and is
+dropped here for the same reason claim1.py drops it — no resolved flag). Run:
+`python -m token_waste.cli mechanisms`. Output: `data/out/m6_*.csv`.
+
+The B-tier-local priced ratio (11,835→8,133 resolved / 8,606→4,367 unresolved attempts once
+restricted to these 26 entries) is **1.77x**, not the pooled 1.51x — a real composition
+difference between this subset and the full 41-entry set, not an error; the three mechanisms
+below are decomposed against 1.77x, not 1.51x, and the two numbers should not be conflated.
+
+**1a. Turn/cost-limit exhaustion.** 3.7% of unresolved instances (161 of 4,367) exit with
+`LimitsExceeded` (mini-swe-agent's combined step-limit-or-cost-limit exception; the exit status
+alone can't distinguish which one fired). Small in count, expensive in dollars: these instances
+average $2.31 versus $0.33 for resolved and $0.53 for unresolved instances that exit some other
+way. That 3.7% of unresolved instances accounts for **28% of the $ gap** between the average
+unresolved and average resolved attempt. Consistent with this: unresolved instances run more
+calls overall (median 48 vs 37, mean 58 vs 43) — the limit-exit group is the sharp end of a
+broader tendency to run longer before giving up.
+
+**1b. Context growth.** At every relative position in the trajectory (call 1 of N through call N
+of N, bucketed into deciles), unresolved instances carry more input tokens per call than resolved
+ones — roughly 30-40% more at every decile, not just at the end. Summed over the whole trajectory,
+unresolved instances consume **1.93x** the total input tokens of resolved ones (mean 1,501,056 vs
+777,956 tokens/instance). This is descriptive, not a $ decomposition — token volume feeds cost
+through the pricing tables in Claim 2, and re-deriving a per-mechanism dollar figure here would
+duplicate that machinery — but the ratio is close enough to the local 1.77x cost ratio that it is
+plausibly most of the story.
+
+**1c. Reasoning burn.** Restricted to the 13 entries where `reasoning_tokens` is cleanly measured
+(models classified `subset` in `reasoning_convention_by_model.csv` — no adapter conflation with
+output tokens), unresolved instances burn **1.87x** the reasoning tokens of resolved ones (mean
+15,255 vs 8,144 tokens/instance; median 5,474 vs 2,961).
+
+**These three don't sum to 1.77x and aren't meant to.** They overlap: an instance that hits the
+limit has, by construction, also run more calls, accumulated more context, and (on
+reasoning-capable models) burned more reasoning tokens. Only (a) is a clean, non-overlapping
+dollar decomposition (28% of the excess, from a well-defined 3.7% subgroup); (b) and (c) are
+token-volume evidence for the same underlying pattern — trajectories that don't converge keep
+running, and everything downstream of "keeps running" gets more expensive — not independent,
+additive causes.
+
+**2. `n_calls_unaccounted` vs resolution.** Pooled across the 26 B-tier entries (12,941 instances):
+resolved mean 0.128, unresolved mean 0.144; 5.9% of resolved instances have any unaccounted calls
+vs 6.0% of unresolved. Point-biserial correlation: r = -0.009. **No meaningful pooled
+correlation.** Kimi-K2.5-high alone (the 902-unaccounted-calls entry) shows a real gap: resolved
+mean 1.54 vs unresolved mean 2.44 (r = -0.12, weak but entry-specific) — an outlier, not the
+pooled pattern. n_calls_unaccounted is restricted here to the calls-parquet-bearing entries
+deliberately: on A_dollar-tier entries with no parsed trajectory at all, `n_calls_unaccounted`
+trivially equals `api_calls_reported` for every instance (100% "unaccounted", a different field
+meaning, not a genuine accounting gap), and pooling those in inflates both means by roughly two
+orders of magnitude for no real signal.
+
+**3. Does the reasoning undercount (Claim 2 evidence (b)) concentrate in unresolved instances?**
+Per entry (the 7 `additive`-classified entries, 8 rows since gemini-3-pro-preview spans two
+entries): 5 of 7 comparable entries show a *higher* violation fraction (reasoning_tokens >
+output_tokens) in unresolved instances than resolved, by 0.1-1.3 percentage points; 2 show the
+reverse, by under 0.02 points. Unweighted mean difference across entries: +0.33 percentage points
+toward unresolved. A naive pooled-instance average gives the opposite sign (resolved 9.1% vs
+unresolved 4.3%) — that's a composition artifact, not a real effect: one entry
+(`gemini-3-5-flash-fair`, ~57% violation rate in both groups almost identically) has a 4.4:1
+resolved:unresolved instance ratio and dominates the pooled average by instance count alone,
+masking the per-entry pattern. **So: yes, it concentrates slightly toward unresolved instances,
+not away from them** — but the effect is a fraction of a percentage point on top of an already
+immaterial total ($11.34 of $7,611, established in Claim 2 (b)), so even full concentration in
+unresolved instances does not move 52.9% in any reportable way. This closes the open item: 52.9%
+stands.

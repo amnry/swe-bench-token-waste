@@ -14,6 +14,7 @@ from . import claim1
 from .entries import select_entries
 from .extract import extract_entry, print_report
 from . import pricing
+from . import waste_mechanisms
 
 _LIST_COLUMNS = (
     "entry",
@@ -117,6 +118,11 @@ def _cmd_price(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_mechanisms(args: argparse.Namespace) -> int:
+    waste_mechanisms.run()
+    return 0
+
+
 def _not_implemented(name: str):
     def _cmd(args: argparse.Namespace) -> int:
         print(f"'{name}' is not implemented yet (see plan.md milestones).", file=sys.stderr)
@@ -144,6 +150,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_price = sub.add_parser("price", help="Dual-run pricing (litellm-pinned vs curated). Network for pins.")
     p_price.set_defaults(func=_cmd_price)
+
+    p_mechanisms = sub.add_parser(
+        "mechanisms",
+        help="M6 follow-up: mechanisms behind the 1.51x cost ratio, calls_unaccounted vs "
+        "resolution, reasoning-undercount concentration. No network.",
+    )
+    p_mechanisms.set_defaults(func=_cmd_mechanisms)
 
     for name in ("metrics", "check", "all"):
         p = sub.add_parser(name, help="(not yet implemented)")

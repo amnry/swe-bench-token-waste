@@ -1,0 +1,9 @@
+entry,resolved_n,resolved_mean_violation_frac,unresolved_n,unresolved_mean_violation_frac
+20251118_mini-v1.15.0_gemini-3-pro-preview-20251118,371,0.00125,129,0.00091
+20251124_mini-v1.17.0_minimax-m2,305,0.02993,195,0.04277
+20260217_mini-v2.0.0_deepseek-3-2-high,350,0.00023,150,8e-05
+20260217_mini-v2.0.0_glm-5-high,364,0.01747,136,0.02481
+20260217_mini-v2.0.0_kimi-k2-5-high,354,0.01145,146,0.01918
+20260217_mini-v2.0.0_minimax-2-5-high,379,0.00054,121,0.00039
+20260226_mini-v2.0.0_gemini-3-pro-high,0,,491,0.0
+20260901_mini-v2.4.2_gemini-3-5-flash,359,0.57012,82,0.57622
